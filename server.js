@@ -88,52 +88,6 @@ function viewEmployees() {
     );
 }
 
-function addDepartment() {
-    inquirer
-        .prompt([
-            {
-                type: 'input',
-                name: 'name',
-                message: 'Enter the name of the department:',
-            }
-        ])
-        .then((answer) => {
-            pool.query('INSERT INTO department (name) VALUES ($1)', [answer.name], (err, res) => {
-                if (err) throw err;
-                console.log(`Department ${answer.name} added successfully!`);
-                mainMenu();
-            });
-        });
-}
-
-function addRole() {
-    inquirer
-        .prompt([
-            {
-                type: 'input',
-                name: 'title',
-                message: 'Enter the title of the role:',
-            },
-            {
-                type: 'input',
-                name: 'salary',
-                message: 'Enter the salary for the role:',
-            },
-            {
-                type: 'input',
-                name: 'departmentId',
-                message: 'Enter the department ID for the role:',
-            }
-        ])
-        .then((answers) => {
-            pool.query('INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)', [answers.title, answers.salary, answers.departmentId], (err, res) => {
-                if (err) throw err;
-                console.log(`Role ${answers.title} added successfully!`);
-                mainMenu();
-            });
-        });
-}
-
 function addEmployee() {
     inquirer
         .prompt([
@@ -159,14 +113,85 @@ function addEmployee() {
             }
         ])
         .then((answers) => {
-            pool.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)', [answers.firstName, answers.lastName, answers.roleId, answers.managerId || null], (err, res) => {
-                if (err) throw err;
-                console.log(`Employee ${answers.firstName} ${answers.lastName} added successfully!`);
-                mainMenu();
-            });
+            console.log("User Input Received:", answers); // Debugging line
+            
+            const roleId = parseInt(answers.roleId);
+            const managerId = answers.managerId ? parseInt(answers.managerId) : null;
+
+            console.log("Executing SQL Query..."); // Debugging line
+
+            pool.query(
+                'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)',
+                [answers.firstName, answers.lastName, roleId, managerId],
+                (err, res) => {
+                    if (err) {
+                        console.error("Error adding employee:", err);
+                        return mainMenu(); // Ensure we return to the main menu even after an error
+                    }
+
+                    console.log(`Employee ${answers.firstName} ${answers.lastName} added successfully!`);
+                    mainMenu();
+                }
+            );
+        })
+        .catch((error) => {
+            console.error("Inquirer Error:", error);
         });
 }
 
+function addRole() {
+    inquirer
+        .prompt([
+            {
+                type: 'input',
+                name: 'title',
+                message: 'Enter the title of the role:',
+            },
+            {
+                type: 'input',
+                name: 'salary',
+                message: 'Enter the salary for the role:',
+            },
+            {
+                type: 'input',
+                name: 'departmentId',
+                message: 'Enter the department ID for the role:',
+            }
+        ])
+        .then((answers) => {
+            pool.query(
+                'INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)',
+                [answers.title, answers.salary, answers.departmentId],
+                (err, res) => {
+                    if (err) throw err;
+                    console.log(`Role ${answers.title} added successfully!`);
+                    mainMenu();
+                }
+            );
+        });
+}
+
+function addDepartment() {
+    inquirer
+        .prompt([
+            {
+                type: 'input',
+                name: 'name',
+                message: 'Enter the name of the department:',
+            }
+        ])
+        .then((answers) => {
+            pool.query(
+                'INSERT INTO department (name) VALUES ($1)',
+                [answers.name],
+                (err, res) => {
+                    if (err) throw err;
+                    console.log(`Department ${answers.name} added successfully!`);
+                    mainMenu();
+                }
+            );
+        });
+}
 function updateEmployeeRole() {
     inquirer
         .prompt([
@@ -182,11 +207,15 @@ function updateEmployeeRole() {
             }
         ])
         .then((answers) => {
-            pool.query('UPDATE employee SET role_id = $1 WHERE id = $2', [answers.newRoleId, answers.employeeId], (err, res) => {
-                if (err) throw err;
-                console.log(`Employee ID ${answers.employeeId} updated successfully!`);
-                mainMenu();
-            });
+            pool.query(
+                'UPDATE employee SET role_id = $1 WHERE id = $2',
+                [answers.newRoleId, answers.employeeId],
+                (err, res) => {
+                    if (err) throw err;
+                    console.log(`Employee ID ${answers.employeeId} updated with new role ID ${answers.newRoleId}!`);
+                    mainMenu();
+                }
+            );
         });
 }
 
